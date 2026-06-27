@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VillageCare 360 — Urban–Rural Healthcare Connectivity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.128.0/three.min.js"></script>
+<style>
+  :root{
+    --navy:#081A2B;
+    --navy-deep:#04101C;
+    --teal:#0E3B41;
+    --mint:#37E0C4;
+    --mint-dim:#1F8C7C;
+    --gold:#F2B134;
+    --ice:#E7F4F3;
+    --ice-dim:#A9C3C4;
+    --card:#0C2536;
+    --line:rgba(231,244,243,0.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--navy-deep);
+    color:var(--ice);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--mint);
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:'';width:18px;height:1px;background:var(--mint);display:inline-block;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  ::selection{background:var(--mint);color:var(--navy-deep);}
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    padding:20px 0;
+    background:linear-gradient(to bottom, rgba(4,16,28,0.92), rgba(4,16,28,0));
+    backdrop-filter:blur(6px);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:600;font-size:19px;}
+  .logo-mark{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 30% 30%, var(--mint), var(--mint-dim) 70%);box-shadow:0 0 18px rgba(55,224,196,0.5);}
+  .navlinks{display:flex;gap:36px;font-size:14px;color:var(--ice-dim);}
+  .navlinks a:hover{color:var(--mint);}
+  .nav-cta{
+    border:1px solid var(--mint-dim);padding:9px 18px;border-radius:100px;
+    font-size:13px;color:var(--mint);transition:all .25s;
+  }
+  .nav-cta:hover{background:var(--mint);color:var(--navy-deep);}
+  @media(max-width:860px){.navlinks{display:none;}}
+
+  /* HERO */
+  .hero{
+    position:relative;min-height:100vh;display:flex;align-items:center;
+    overflow:hidden;
+    background:radial-gradient(ellipse at 75% 20%, rgba(55,224,196,0.10), transparent 55%),
+               radial-gradient(ellipse at 20% 80%, rgba(242,177,52,0.06), transparent 50%),
+               var(--navy-deep);
+  }
+  #globe-canvas{
+    position:absolute;top:0;right:-8%;width:62%;height:100%;z-index:1;
+    opacity:0;transition:opacity 1.4s ease;
+  }
+  .hero-content{position:relative;z-index:2;padding-top:60px;}
+  .hero-content .wrap{display:grid;grid-template-columns:1.05fr 0.95fr;gap:40px;align-items:center;}
+  .hero h1{
+    font-size:clamp(38px,5.2vw,68px);
+    line-height:1.04;
+    margin:22px 0 22px;
+    color:var(--ice);
+  }
+  .hero h1 em{font-style:italic;color:var(--mint);font-weight:500;}
+  .hero p.lede{font-size:17px;line-height:1.65;color:var(--ice-dim);max-width:480px;margin-bottom:34px;}
+  .btn-row{display:flex;gap:16px;flex-wrap:wrap;}
+  .btn{
+    padding:15px 28px;border-radius:100px;font-size:14.5px;font-weight:600;
+    display:inline-flex;align-items:center;gap:8px;transition:all .25s;
+  }
+  .btn-primary{background:var(--mint);color:var(--navy-deep);}
+  .btn-primary:hover{background:var(--ice);transform:translateY(-2px);}
+  .btn-ghost{border:1px solid var(--line);color:var(--ice);}
+  .btn-ghost:hover{border-color:var(--mint-dim);color:var(--mint);}
+  .hero-stats{display:flex;gap:36px;margin-top:54px;flex-wrap:wrap;}
+  .stat b{font-family:'Fraunces',serif;font-size:30px;display:block;color:var(--mint);font-weight:600;}
+  .stat span{font-size:12.5px;color:var(--ice-dim);}
+  .scroll-cue{
+    position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ice-dim);
+    display:flex;flex-direction:column;align-items:center;gap:8px;letter-spacing:0.1em;
+    z-index:2;
+  }
+  .scroll-cue .line{width:1px;height:30px;background:linear-gradient(to bottom,var(--mint),transparent);animation:scrollpulse 1.8s infinite;}
+  @keyframes scrollpulse{0%,100%{opacity:.2}50%{opacity:1}}
+
+  /* SECTION SHARED */
+  section{position:relative;padding:120px 0;}
+  .section-head{max-width:640px;margin-bottom:64px;}
+  .section-head h2{font-size:clamp(28px,3.4vw,42px);margin-top:16px;line-height:1.15;}
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity .8s ease, transform .8s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* PROBLEM */
+  .problem{background:linear-gradient(180deg,var(--navy-deep),var(--navy));}
+  .problem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  .problem-card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 22px;
+    transition:transform .35s, border-color .35s;
+  }
+  .problem-card:hover{transform:translateY(-6px);border-color:var(--mint-dim);}
+  .problem-card .num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);}
+  .problem-card .pct{font-family:'Fraunces',serif;font-size:34px;color:var(--ice);margin:14px 0 10px;font-weight:600;}
+  .problem-card p{font-size:13.5px;color:var(--ice-dim);line-height:1.55;}
+  @media(max-width:900px){.problem-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* HOW IT WORKS - process w/ connecting line, 3d node canvas */
+  .process{background:var(--navy);}
+  .process-row{display:grid;grid-template-columns:0.9fr 1.1fr;gap:60px;align-items:center;}
+  #flow-canvas{width:100%;height:420px;}
+  .steps{display:flex;flex-direction:column;}
+  .step{
+    display:grid;grid-template-columns:46px 1fr;gap:18px;padding:20px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:none;}
+  .step .dot{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--mint-dim);
+    display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;
+    font-size:13px;color:var(--mint);flex-shrink:0;
+  }
+  .step h4{font-size:16px;font-weight:600;font-family:'Inter',sans-serif;margin-bottom:5px;color:var(--ice);}
+  .step p{font-size:13.5px;color:var(--ice-dim);line-height:1.5;}
+  @media(max-width:900px){.process-row{grid-template-columns:1fr;}#flow-canvas{height:300px;order:2;}}
+
+  /* TECH */
+  .tech{background:linear-gradient(180deg,var(--navy),var(--navy-deep));}
+  .tech-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
+  .tech-card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:26px 18px;text-align:left;position:relative;overflow:hidden;
+  }
+  .tech-card .icon{width:40px;height:40px;margin-bottom:18px;}
+  .tech-card h4{font-size:14.5px;color:var(--ice);margin-bottom:6px;}
+  .tech-card p{font-size:12px;color:var(--ice-dim);line-height:1.5;}
+  @media(max-width:980px){.tech-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* FEATURES */
+  .features{background:var(--navy-deep);}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .feat-card{
+    background:linear-gradient(160deg,var(--card),rgba(12,37,54,0.4));
+    border:1px solid var(--line);border-radius:20px;padding:32px 26px;
+    transition:transform .4s, box-shadow .4s;
+  }
+  .feat-card:hover{transform:translateY(-8px) rotateX(2deg);box-shadow:0 24px 50px -20px rgba(55,224,196,0.18);}
+  .feat-card .tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:.08em;}
+  .feat-card h3{font-size:20px;margin:14px 0 10px;color:var(--ice);}
+  .feat-card p{font-size:13.5px;color:var(--ice-dim);line-height:1.6;}
+  @media(max-width:900px){.feat-grid{grid-template-columns:1fr;}}
+
+  /* BENEFITS / IMPACT split with rotating ring canvas */
+  .impact{background:linear-gradient(180deg,var(--navy-deep) 0%, var(--teal) 100%);}
+  .impact-row{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;}
+  #ring-canvas{width:100%;height:380px;}
+  .impact-list{display:flex;flex-direction:column;gap:22px;}
+  .impact-item{display:flex;gap:16px;align-items:flex-start;}
+  .impact-item .mk{width:8px;height:8px;border-radius:50%;background:var(--mint);margin-top:8px;flex-shrink:0;box-shadow:0 0 10px var(--mint);}
+  .impact-item h4{font-size:16px;color:var(--ice);margin-bottom:4px;}
+  .impact-item p{font-size:13.5px;color:var(--ice-dim);}
+  @media(max-width:900px){.impact-row{grid-template-columns:1fr;}}
+
+  /* FUTURE */
+  .future{background:var(--teal);}
+  .future-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .future-card{
+    border:1px solid rgba(231,244,243,0.14);border-radius:16px;padding:26px 20px;
+    background:rgba(4,16,28,0.35);
+  }
+  .future-card .yr{font-family:'JetBrains Mono',monospace;color:var(--mint);font-size:12px;}
+  .future-card h4{margin:12px 0 8px;font-size:15.5px;color:var(--ice);}
+  .future-card p{font-size:12.5px;color:var(--ice-dim);line-height:1.5;}
+  @media(max-width:900px){.future-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* CTA */
+  .cta{
+    background:var(--navy-deep);text-align:center;padding:140px 0;
+    position:relative;overflow:hidden;
+  }
+  .cta h2{font-size:clamp(30px,4.4vw,52px);max-width:780px;margin:18px auto 30px;line-height:1.12;}
+  .cta .btn-row{justify-content:center;}
+
+  footer{background:var(--navy-deep);border-top:1px solid var(--line);padding:50px 0;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;align-items:center;}
+  footer .fcol p{font-size:12.5px;color:var(--ice-dim);margin-top:6px;}
+  footer .credit{font-size:12px;color:var(--ice-dim);}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{transition:none;}
+    .scroll-cue .line{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo"><span class="logo-mark"></span>VillageCare 360</div>
+    <div class="navlinks">
+      <a href="#problem">The Gap</a>
+      <a href="#process">How It Works</a>
+      <a href="#tech">Technology</a>
+      <a href="#impact">Impact</a>
+    </div>
+    <a class="nav-cta" href="#cta">Partner With Us</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="globe-canvas"></canvas>
+  <div class="hero-content">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">Urban–Rural Healthcare Connectivity</div>
+        <h1>The nearest <em>specialist</em><br>is now a signal away.</h1>
+        <p class="lede">VillageCare 360 links rural health centers to urban hospitals through telemedicine — real-time consultation, IoT vitals, and digital records, so distance never decides who gets treated.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#process">See how it works</a>
+          <a class="btn btn-ghost" href="#cta">Bring it to your district</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><b>70%</b><span>of India's population is rural</span></div>
+          <div class="stat"><b>&lt;20%</b><span>of doctors serve those areas</span></div>
+          <div class="stat"><b>24/7</b><span>specialist access via video</span></div>
+        </div>
+      </div>
+      <div></div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span class="line"></span>SCROLL</div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">The Gap</div>
+      <h2>One country, two very different distances to a doctor.</h2>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card reveal"><div class="num">01</div><div class="pct">70%</div><p>of the population lives rurally, far from specialist care.</p></div>
+      <div class="problem-card reveal"><div class="num">02</div><div class="pct">&lt;20%</div><p>of doctors practice in those same rural areas.</p></div>
+      <div class="problem-card reveal"><div class="num">03</div><div class="pct">2–4 hrs</div><p>average travel time to reach the nearest qualified specialist.</p></div>
+      <div class="problem-card reveal"><div class="num">04</div><div class="pct">↑ risk</div><p>maternal & infant mortality rises with every hour of delay.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process" id="process">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">How It Works</div>
+      <h2>From a village kiosk to a city hospital, in five steps.</h2>
+    </div>
+    <div class="process-row">
+      <canvas id="flow-canvas" class="reveal"></canvas>
+      <div class="steps reveal">
+        <div class="step"><div class="dot">01</div><div><h4>Patient registers</h4><p>At a rural health center or directly through the mobile app.</p></div></div>
+        <div class="step"><div class="dot">02</div><div><h4>Symptoms & vitals captured</h4><p>IoT devices record BP, ECG, glucose — entered into the system instantly.</p></div></div>
+        <div class="step"><div class="dot">03</div><div><h4>AI suggests possible diagnosis</h4><p>A preliminary read helps the urban doctor prioritize and prepare.</p></div></div>
+        <div class="step"><div class="dot">04</div><div><h4>Urban doctor connects via video</h4><p>Real-time consultation closes the distance between patient and specialist.</p></div></div>
+        <div class="step"><div class="dot">05</div><div><h4>Prescription & follow-up</h4><p>Sent digitally, with monitoring continued from home.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section class="tech" id="tech">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Under the Hood</div>
+      <h2>Built on technology rural networks can actually run on.</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card reveal"><div class="icon">🧠</div><h4>AI Symptom Analysis</h4><p>Flags likely conditions before the consult begins.</p></div>
+      <div class="tech-card reveal"><div class="icon">📟</div><h4>IoT Health Devices</h4><p>BP, ECG & glucose monitors stream vitals live.</p></div>
+      <div class="tech-card reveal"><div class="icon">☁️</div><h4>Cloud Computing</h4><p>Records sync securely across every health center.</p></div>
+      <div class="tech-card reveal"><div class="icon">📱</div><h4>Mobile Applications</h4><p>One app for patients, doctors & field workers.</p></div>
+      <div class="tech-card reveal"><div class="icon">📡</div><h4>5G / Connectivity</h4><p>Built to degrade gracefully on low bandwidth too.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Key Features</div>
+      <h2>Everything a remote clinic needs in one connected system.</h2>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card reveal"><div class="tag">ACCESS</div><h3>24/7 Doctor Access</h3><p>Specialists on call around the clock — no waiting for the next visiting day.</p></div>
+      <div class="feat-card reveal"><div class="tag">LANGUAGE</div><h3>Multilingual Support</h3><p>Consultations and records in the patient's own language, not just the doctor's.</p></div>
+      <div class="feat-card reveal"><div class="tag">RECORDS</div><h3>Electronic Medical Records</h3><p>One history that follows the patient between centers, not paper that gets lost.</p></div>
+      <div class="feat-card reveal"><div class="tag">SAFETY</div><h3>Emergency Alerts</h3><p>Critical vitals trigger instant alerts to the nearest available doctor.</p></div>
+      <div class="feat-card reveal"><div class="tag">PAYMENTS</div><h3>Online Payment Integration</h3><p>Transparent, affordable billing built for low-income households.</p></div>
+      <div class="feat-card reveal"><div class="tag">SCHEMES</div><h3>Govt. Scheme Integration</h3><p>Connects directly with public health programs already serving the region.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="impact" id="impact">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Benefits & Social Impact</div>
+      <h2>What changes when the distance disappears.</h2>
+    </div>
+    <div class="impact-row">
+      <canvas id="ring-canvas" class="reveal"></canvas>
+      <div class="impact-list reveal">
+        <div class="impact-item"><span class="mk"></span><div><h4>Faster emergency response</h4><p>Minutes saved in triage can be the difference in critical cases.</p></div></div>
+        <div class="impact-item"><span class="mk"></span><div><h4>Access to specialists, not just generalists</h4><p>Rural patients see the right doctor the first time.</p></div></div>
+        <div class="impact-item"><span class="mk"></span><div><h4>Reduced rural healthcare cost</h4><p>No travel, no lodging, no lost wages from a day's journey.</p></div></div>
+        <div class="impact-item"><span class="mk"></span><div><h4>Early disease detection</h4><p>Routine remote monitoring catches problems before they're emergencies.</p></div></div>
+        <div class="impact-item"><span class="mk"></span><div><h4>Supports Sustainable Development Goals</h4><p>Good Health & Well-being, and Reduced Inequalities, made measurable.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUTURE -->
+<section class="future">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">What's Next</div>
+      <h2>The roadmap beyond the video call.</h2>
+    </div>
+    <div class="future-grid">
+      <div class="future-card reveal"><div class="yr">NEXT</div><h4>AI Early Detection</h4><p>Predictive models flag disease risk before symptoms peak.</p></div>
+      <div class="future-card reveal"><div class="yr">NEXT</div><h4>Drone Medicine Delivery</h4><p>Critical medication reaches centers no road can.</p></div>
+      <div class="future-card reveal"><div class="yr">LATER</div><h4>Wearable Monitoring</h4><p>Continuous vitals tracking between consultations.</p></div>
+      <div class="future-card reveal"><div class="yr">LATER</div><h4>Government Scheme Sync</h4><p>Seamless enrollment into national health programs.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="cta">
+  <div class="wrap reveal">
+    <div class="eyebrow" style="justify-content:center;">Team MediTech · SKH009</div>
+    <h2>Technology can close the gap between a village and a hospital. Help us connect the next one.</h2>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="mailto:hello@villagecare360.org">Bring VillageCare 360 to your district</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fcol">
+      <div class="logo"><span class="logo-mark"></span>VillageCare 360</div>
+      <p>Urban–Rural Healthcare Connectivity System</p>
+    </div>
+    <div class="credit">Built by Sai Sandeep · Vinay · Vishnu Vardhan · Asifuddin — Team MediTech</div>
+  </div>
+</footer>
+
+<script>
+/* ---------- Scroll reveal ---------- */
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+/* ---------- HERO: 3D globe connecting village & city ---------- */
+(function(){
+  const canvas = document.getElementById('globe-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0,0,6.2);
+
+  function size(){
+    const w = canvas.clientWidth || canvas.parentElement.clientWidth*0.62;
+    const h = canvas.clientHeight || window.innerHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', size);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  // wireframe sphere (globe)
+  const geo = new THREE.IcosahedronGeometry(2.1, 3);
+  const mat = new THREE.MeshBasicMaterial({color:0x1f8c7c, wireframe:true, transparent:true, opacity:0.35});
+  const globe = new THREE.Mesh(geo, mat);
+  group.add(globe);
+
+  // inner glow sphere
+  const glowGeo = new THREE.SphereGeometry(2.05, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({color:0x081a2b, transparent:true, opacity:0.55});
+  group.add(new THREE.Mesh(glowGeo, glowMat));
+
+  // node points (village + city) on sphere surface
+  function latLonToVec3(lat, lon, r){
+    const phi = (90-lat)*(Math.PI/180);
+    const theta = (lon+180)*(Math.PI/180);
+    return new THREE.Vector3(
+      -r*Math.sin(phi)*Math.cos(theta),
+      r*Math.cos(phi),
+      r*Math.sin(phi)*Math.sin(theta)
+    );
+  }
+  const villagePos = latLonToVec3(15, 40, 2.12);
+  const cityPos = latLonToVec3(35, 100, 2.12);
+
+  function makeNode(pos, color){
+    const g = new THREE.SphereGeometry(0.07,16,16);
+    const m = new THREE.MeshBasicMaterial({color});
+    const mesh = new THREE.Mesh(g,m);
+    mesh.position.copy(pos);
+    group.add(mesh);
+    // halo ring
+    const ringGeo = new THREE.RingGeometry(0.1,0.13,32);
+    const ringMat = new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.8, side:THREE.DoubleSide});
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(pos);
+    ring.lookAt(0,0,0);
+    group.add(ring);
+    return mesh;
+  }
+  makeNode(villagePos, 0xF2B134);
+  makeNode(cityPos, 0x37E0C4);
+
+  // arc curve between the two nodes
+  const mid = villagePos.clone().add(cityPos).multiplyScalar(0.5).normalize().multiplyScalar(3.1);
+  const curve = new THREE.QuadraticBezierCurve3(villagePos, mid, cityPos);
+  const points = curve.getPoints(64);
+  const arcGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const arcMat = new THREE.LineBasicMaterial({color:0x37E0C4, transparent:true, opacity:0.85});
+  group.add(new THREE.Line(arcGeo, arcMat));
+
+  // travelling pulse along arc
+  const pulseGeo = new THREE.SphereGeometry(0.045,12,12);
+  const pulseMat = new THREE.MeshBasicMaterial({color:0xffffff});
+  const pulse = new THREE.Mesh(pulseGeo, pulseMat);
+  group.add(pulse);
+  let t = 0;
+
+  // ambient floating particles
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 180;
+  const starPos = new Float32Array(starCount*3);
+  for(let i=0;i<starCount;i++){
+    const r = 4 + Math.random()*3;
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos((Math.random()*2)-1);
+    starPos[i*3] = r*Math.sin(phi)*Math.cos(theta);
+    starPos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
+    starPos[i*3+2] = r*Math.cos(phi);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+  const starMat = new THREE.PointsMaterial({color:0x37E0C4, size:0.035, transparent:true, opacity:0.55});
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+
+  size();
+  canvas.style.opacity = 1;
+
+  let mouseX = 0;
+  window.addEventListener('mousemove', (e)=>{ mouseX = (e.clientX/window.innerWidth - 0.5); });
+
+  function animate(){
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.0022;
+    stars.rotation.y -= 0.0006;
+    group.rotation.x = mouseX*0.15;
+
+    t += 0.006;
+    if(t>1) t=0;
+    const p = curve.getPoint(t);
+    pulse.position.copy(p);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+/* ---------- PROCESS: flowing nodes diagram ---------- */
+(function(){
+  const canvas = document.getElementById('flow-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0,0.3,5.5);
+
+  function size(){
+    const w = canvas.clientWidth, h = canvas.clientHeight || 420;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', size);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const colors = [0xF2B134, 0x37E0C4, 0x37E0C4, 0x1F8C7C, 0xF2B134];
+  const positions = [];
+  const n = 5;
+  for(let i=0;i<n;i++){
+    const angle = (i/n)*Math.PI*2;
+    positions.push(new THREE.Vector3(Math.cos(angle)*2, Math.sin(angle)*1.4, Math.sin(angle*1.3)*0.6));
+  }
+  const nodes = [];
+  positions.forEach((pos,i)=>{
+    const g = new THREE.IcosahedronGeometry(0.18,0);
+    const m = new THREE.MeshBasicMaterial({color:colors[i], wireframe:true});
+    const mesh = new THREE.Mesh(g,m);
+    mesh.position.copy(pos);
+    group.add(mesh);
+    nodes.push(mesh);
+    const g2 = new THREE.SphereGeometry(0.07,12,12);
+    const m2 = new THREE.MeshBasicMaterial({color:colors[i]});
+    const core = new THREE.Mesh(g2,m2);
+    core.position.copy(pos);
+    group.add(core);
+  });
+  // connect sequentially
+  const lineMat = new THREE.LineBasicMaterial({color:0x1F8C7C, transparent:true, opacity:0.6});
+  for(let i=0;i<n-1;i++){
+    const g = new THREE.BufferGeometry().setFromPoints([positions[i], positions[i+1]]);
+    group.add(new THREE.Line(g, lineMat));
+  }
+  // pulse traveling whole loop
+  const pulse = new THREE.Mesh(new THREE.SphereGeometry(0.05,10,10), new THREE.MeshBasicMaterial({color:0xffffff}));
+  group.add(pulse);
+  let seg = 0, segT = 0;
+
+  size();
+  function animate(){
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.0026;
+    nodes.forEach((m,i)=>{ m.rotation.x += 0.01; m.rotation.y += 0.008; });
+
+    segT += 0.012;
+    if(segT>1){ segT=0; seg=(seg+1)%(n-1); }
+    pulse.position.lerpVectors(positions[seg], positions[seg+1], segT);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+/* ---------- IMPACT: rotating ring of stat orbs ---------- */
+(function(){
+  const canvas = document.getElementById('ring-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0,0.4,5.2);
+
+  function size(){
+    const w = canvas.clientWidth, h = canvas.clientHeight || 380;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', size);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const core = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(0.9,1),
+    new THREE.MeshBasicMaterial({color:0x37E0C4, wireframe:true, transparent:true, opacity:0.5})
+  );
+  group.add(core);
+
+  const orbColors = [0xF2B134, 0x37E0C4, 0x1F8C7C, 0xE7F4F3, 0x37E0C4];
+  const orbs = [];
+  const radius = 2.1;
+  orbColors.forEach((c,i)=>{
+    const angle = (i/orbColors.length)*Math.PI*2;
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.13,16,16), new THREE.MeshBasicMaterial({color:c}));
+    orb.userData.angle = angle;
+    orb.userData.r = radius;
+    group.add(orb);
+    orbs.push(orb);
+  });
+
+  size();
+  function animate(){
+    requestAnimationFrame(animate);
+    core.rotation.x += 0.004;
+    core.rotation.y += 0.006;
+    orbs.forEach((orb)=>{
+      orb.userData.angle += 0.006;
+      const a = orb.userData.angle;
+      orb.position.set(Math.cos(a)*orb.userData.r, Math.sin(a*0.7)*0.9, Math.sin(a)*orb.userData.r);
+    });
+    group.rotation.y += 0.0015;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
